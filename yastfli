@@ -29,6 +29,11 @@ usage() {
 
  OPTIONS
 
+ --directory|-d
+   Use a directory overlay instead of an image file.
+   It can't be used with fat32. Size option would be ignored.
+   Default is false.
+
  --filesystem|-f [ext4|fat32]
    Filesystem of the data partition.
    Default is ext4.
@@ -39,11 +44,11 @@ usage() {
  --label|-l
    Label of the data partition.
    Default is LIVE.
-  
+
  --size-mb|-s
    Size in MB of the overlay file.
-   Default is 512.
    It can't be more than 4095 for fat32 data partitions.
+   Default is 512.
 
  --target|-t
    Target device e.g. /dev/sda.
@@ -64,6 +69,7 @@ fi
 
 ### VARIABLE INITIALIZATION STARTS ###
 datafs='ext4'
+dirovl=false
 iso=''
 label='LIVE'
 size=512
@@ -77,6 +83,10 @@ while true ; do
   case $1 in
     --help|-h)
       usage
+      ;;
+    --directory|-d)
+      dirovl=true
+      shift
       ;;
     --filesystem|-f)
       datafs="${2}"
@@ -122,9 +132,12 @@ elif ! [[ -b "${tgt}" ]]; then
 elif [[ "${datafs}" != "ext4" && "${datafs}" != "fat32" ]]; then
   echo "ERROR:  invalid data partition filesystem. It can only be ext4 or fat32."
   exit 2
+elif [[ ${dirovl} == true && "${datafs}" == "fat32" ]]; then
+  echo "ERROR:  fat32 is not compatible with directory overlay. Use file or change to ext4."
+  exit 2
 fi
-if [[ "${datafs}" == "fat32" && "${size}" -gt 4095 ]]; then
-  echo "INFO: can't have an overlay of ${size}MB on fat32. Reduced to 4095MB."
+if [[ "${datafs}" == "fat32" && ${size} -gt 4095 ]]; then
+  echo "INFO:  fat32 can't hold an overlay of ${size}M. Reduced to 4095M."
   size=4095
 fi
 tgtp1="${tgt}"1
@@ -179,23 +192,32 @@ echo "Syncing filesystem writes to disc. This may take a while..."
 sync -f "${datamnt}"/
 ### DATA PARTITION ENDS ###
 
-### OVERLAY FILE STARTS ###
+### OVERLAY STARTS ###
 tgtlabel=($(lsblk -no LABEL "${tgtp2}" || :))
 tgtuuid=($(lsblk -no UUID "${tgtp2}" || :))
 tgtfile=overlay-"${tgtlabel}"-"${tgtuuid}"
 ovlpath="${datamnt}"/LiveOS/"${tgtfile}"
 echo -e "${green}[5/7]${nc} Initializing persistent overlay on ${ovlpath}"
-truncate -s 0 "${ovlpath}"
-fallocate -x -l "${size}"M "${ovlpath}"
-echo "Syncing filesystem writes to disc. This may take a while..."
-sync -f "${ovlpath}"
-### OVERLAY FILE ENDS ###
+if [[ ${dirovl} == true && "${datafs}" == "ext4" ]]; then
+  mkdir -m 0755 --context=system_u:object_r:root_t:s0 \
+  $datamnt/LiveOS/overlayfs $datamnt/LiveOS/ovlwork
+else
+  truncate -s 0 "${ovlpath}"
+  fallocate -x -l ${size}M "${ovlpath}"
+  echo "Syncing filesystem writes to disc. This could take a while."
+  sync -f "${ovlpath}"
+fi
+### OVERLAY ENDS ###
 
 ### GRUB STARTS ###
 echo -e "${green}[6/7]${nc} Adding overlay to ${espmnt}/EFI/BOOT/grub.cfg"
 isolabel=($(lsblk -no LABEL "${isoloop}" || :))
 sed -i -r "s/root=live:CDLABEL="${isolabel}"/root=live:UUID="${tgtuuid}"/" "${espmnt}"/EFI/BOOT/grub.cfg
-sed -i -r "s/rd\.live\.image|liveimg/& rd.live.overlay=UUID="${tgtuuid}" rd.live.overlay.overlayfs/" "${espmnt}"/EFI/BOOT/grub.cfg
+if [[ ${dirovl} == true && "${datafs}" == "ext4" ]]; then
+  sed -i -r "s/rd\.live\.image|liveimg/& rd.live.overlay=UUID="${tgtuuid}":\/LiveOS\/overlayfs rd.live.overlay.overlayfs/" "${espmnt}"/EFI/BOOT/grub.cfg
+else
+  sed -i -r "s/rd\.live\.image|liveimg/& rd.live.overlay=UUID="${tgtuuid}" rd.live.overlay.overlayfs/" "${espmnt}"/EFI/BOOT/grub.cfg
+fi
 ### GRUB ENDS ###
 
 ### CLEAN UP STARTS ###
