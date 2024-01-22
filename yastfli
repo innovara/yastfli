@@ -200,12 +200,21 @@ ovlpath="${datamnt}"/LiveOS/"${tgtfile}"
 echo -e "${green}[5/7]${nc} Initializing persistent overlay on ${ovlpath}"
 if [[ ${dirovl} == true && "${datafs}" == "ext4" ]]; then
   mkdir -m 0755 --context=system_u:object_r:root_t:s0 \
-  $datamnt/LiveOS/overlayfs $datamnt/LiveOS/ovlwork
+    $datamnt/LiveOS/overlayfs $datamnt/LiveOS/ovlwork
 else
   truncate -s 0 "${ovlpath}"
   fallocate -x -l ${size}M "${ovlpath}"
   echo "Syncing filesystem writes to disc. This could take a while."
   sync -f "${ovlpath}"
+  mkfs.ext4 -F -L OVERLAY -O ^64bit -j -E nodiscard "${ovlpath}" &> /dev/null
+  tune2fs -c0 -i0 -ouser_xattr,acl "${ovlpath}" &> /dev/null
+  e2fsck -yf "${tgtp2}" &> /dev/null
+  ovl=$(mktemp -d)
+  mount "${ovlpath}" "${ovl}"
+  mkdir -m 0755 --context=system_u:object_r:root_t:s0 \
+    $ovl/overlayfs $ovl/ovlwork
+  umount $ovl
+  chmod 0600 "${ovlpath}" &> /dev/null || :
 fi
 ### OVERLAY ENDS ###
 
