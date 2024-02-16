@@ -222,6 +222,7 @@ fi
 echo -e "${green}[6/7]${nc} Adding overlay to ${espmnt}/EFI/BOOT/grub.cfg"
 isolabel=($(lsblk -no LABEL "${isoloop}" || :))
 sed -i -r "s/root=live:CDLABEL="${isolabel}"/root=live:UUID="${tgtuuid}"/" "${espmnt}"/EFI/BOOT/grub.cfg
+sed -i -r "s/set default=\"1\"/set default=\"0\"/" "${espmnt}"/EFI/BOOT/grub.cfg
 if [[ ${dirovl} == true && "${datafs}" == "ext4" ]]; then
   sed -i -r "s/rd\.live\.image|liveimg/& rd.live.overlay=UUID="${tgtuuid}":\/LiveOS\/overlayfs rd.live.overlay.overlayfs/" "${espmnt}"/EFI/BOOT/grub.cfg
 else
