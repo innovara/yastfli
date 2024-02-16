@@ -11,7 +11,7 @@ I came about writing it after I started looking into `livecd-iso-to-disk` not fu
 [4] https://github.com/livecd-tools/livecd-tools/issues/262
 
 ## How to use it
-yastfli will destroy all existing data on the target drive. If you are looking for a tool that would preserve existing data while adding the new Live OS, this is not for you. If you don’t truly understand what I mean by that, this is probably not for you either. It only takes a moment of confusion between using `/dev/sda` or `/dev/sdb` to wipe out your hard drive and get yourself into a big mess.
+`yastfli` will destroy all existing data on the target drive. If you are looking for a tool that would preserve existing data, while adding the new Live OS, `yastfli` is not the right tool. If you don’t truly understand what I mean by that, this is probably not for you either. It only takes a moment of confusion between using `/dev/sda` or `/dev/sdb` to wipe out your hard drive and get yourself into a big mess.
 
 With the above disclaimer out of the way, let’s take a quick look at the help option.
 
