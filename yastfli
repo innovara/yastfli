@@ -1,22 +1,22 @@
-#!/usr/bin/bash
-#   
-#   yastfli -  Yet Another Script To Flash LiveOS ISOs 
-#   
+#!/usr/bin/env bash
+#
+#   yastfli -  Yet Another Script To Flash LiveOS ISOs
+#
 #   Copyright (C) 2024, Manuel Fombuena <mfombuena@innovara.co.uk>
-#   
+#
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
 #   the Free Software Foundation, either version 3 of the License, or
 #   (at your option) any later version.
-#   
+#
 #   This program is distributed in the hope that it will be useful,
 #   but WITHOUT ANY WARRANTY; without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #   GNU General Public License for more details.
-#   
+#
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#   
+#
 
 export PATH=/sbin:/usr/sbin:$PATH
 
@@ -54,7 +54,7 @@ usage() {
    Target device e.g. /dev/sda.
 
  --help|-h
-   This help.  
+   This help.
  "
   exit 1
 }
@@ -86,7 +86,7 @@ while true ; do
       ;;
     --directory|-d)
       dirovl=true
-      shift
+      shift 0
       ;;
     --filesystem|-f)
       datafs="${2}"
@@ -113,7 +113,7 @@ while true ; do
       exit 2
       ;;
     *)
-      break  
+      break
   esac
   shift
 done
