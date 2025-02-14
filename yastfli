@@ -122,19 +122,19 @@ done
 ### ARGUMENT HANDLING STARTS ###
 if [[ -z "${iso}" || -z "${tgt}" ]]; then
   echo "ERROR:  invalid syntax. You need at least -i <iso> -t <device>."
-  exit 2
+  exit 1
 elif ! [[ -f "${iso}" ]]; then
   echo "ERROR: ISO file ${iso} doesn't exist."
-  exit 2
+  exit 1
 elif ! [[ -b "${tgt}" ]]; then
   echo "ERROR:  ${tgt} not present."
-  exit 2
+  exit 1
 elif [[ "${datafs}" != "ext4" && "${datafs}" != "fat32" ]]; then
   echo "ERROR:  invalid data partition filesystem. It can only be ext4 or fat32."
-  exit 2
+  exit 1
 elif [[ ${dirovl} == true && "${datafs}" == "fat32" ]]; then
   echo "ERROR:  fat32 is not compatible with directory overlay. Use file or change to ext4."
-  exit 2
+  exit 1
 fi
 if [[ "${datafs}" == "fat32" && ${size} -gt 4095 ]]; then
   echo "INFO:  fat32 can't hold an overlay of ${size}M. Reduced to 4095M."
