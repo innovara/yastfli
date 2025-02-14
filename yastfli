@@ -45,6 +45,10 @@ usage() {
    Label of the data partition.
    Default is LIVE.
 
+ --no-overlay|-n
+   Don't create an overlay.
+   Default is false.
+
  --size-mb|-s
    Size in MB of the overlay file.
    It can't be more than 4095 for fat32 data partitions.
@@ -72,6 +76,7 @@ datafs='ext4'
 dirovl=false
 iso=''
 label='LIVE'
+noovl=false
 size=512
 tgt=''
 green='\033[0;32m'
@@ -99,6 +104,10 @@ while true ; do
     --label|-l)
       label="${2}"
       shift
+      ;;
+    --no-overlay|-n)
+      shift 0
+      noovl=true
       ;;
     --size-mb|-s)
       size="${2}"
@@ -132,13 +141,15 @@ elif ! [[ -b "${tgt}" ]]; then
 elif [[ "${datafs}" != "ext4" && "${datafs}" != "fat32" ]]; then
   echo "ERROR:  invalid data partition filesystem. It can only be ext4 or fat32."
   exit 1
-elif [[ ${dirovl} == true && "${datafs}" == "fat32" ]]; then
+elif [[ ${dirovl} == true && "${datafs}" == "fat32" && ${noovl} == false ]]; then
   echo "ERROR:  fat32 is not compatible with directory overlay. Use file or change to ext4."
   exit 1
 fi
-if [[ "${datafs}" == "fat32" && ${size} -gt 4095 ]]; then
+if [[ "${datafs}" == "fat32" && ${size} -gt 4095 && ${noovl} == false ]]; then
   echo "INFO:  fat32 can't hold an overlay of ${size}M. Reduced to 4095M."
   size=4095
+elif [[ ${noovl} == true ]]; then
+  echo "INFO:  overlay set no. Any overlay options will be ignored."
 fi
 tgtp1="${tgt}"1
 tgtp2="${tgt}"2
@@ -193,40 +204,46 @@ sync -f "${datamnt}"/
 ### DATA PARTITION ENDS ###
 
 ### OVERLAY STARTS ###
-tgtlabel=($(lsblk -no LABEL "${tgtp2}" || :))
-tgtuuid=($(lsblk -no UUID "${tgtp2}" || :))
-tgtfile=overlay-"${tgtlabel}"-"${tgtuuid}"
-ovlpath="${datamnt}"/LiveOS/"${tgtfile}"
-echo -e "${green}[5/7]${nc} Initializing persistent overlay on ${ovlpath}"
-if [[ ${dirovl} == true && "${datafs}" == "ext4" ]]; then
-  mkdir -m 0755 --context=system_u:object_r:root_t:s0 \
-    $datamnt/LiveOS/overlayfs $datamnt/LiveOS/ovlwork
+tgtuuid=($(lsblk -no UUID "${tgtp2}" || :)) # Out of if statement because it's always needed
+if [[ ${noovl} != true ]]; then
+  tgtlabel=($(lsblk -no LABEL "${tgtp2}" || :))
+  tgtfile=overlay-"${tgtlabel}"-"${tgtuuid}"
+  ovlpath="${datamnt}"/LiveOS/"${tgtfile}"
+  echo -e "${green}[5/7]${nc} Initializing persistent overlay on ${ovlpath}"
+  if [[ ${dirovl} == true && "${datafs}" == "ext4" ]]; then
+    mkdir -m 0755 --context=system_u:object_r:root_t:s0 \
+      $datamnt/LiveOS/overlayfs $datamnt/LiveOS/ovlwork
+  else
+    truncate -s 0 "${ovlpath}"
+    fallocate -x -l ${size}M "${ovlpath}"
+    echo "Syncing filesystem writes to disc. This could take a while."
+    sync -f "${ovlpath}"
+    mkfs.ext4 -F -L OVERLAY -O ^64bit -j -E nodiscard "${ovlpath}" &> /dev/null
+    tune2fs -c0 -i0 -ouser_xattr,acl "${ovlpath}" &> /dev/null
+    e2fsck -yf "${tgtp2}" &> /dev/null
+    ovl=$(mktemp -d)
+    mount "${ovlpath}" "${ovl}"
+    mkdir -m 0755 --context=system_u:object_r:root_t:s0 \
+      $ovl/overlayfs $ovl/ovlwork
+    umount $ovl
+    chmod 0600 "${ovlpath}" &> /dev/null || :
+  fi
 else
-  truncate -s 0 "${ovlpath}"
-  fallocate -x -l ${size}M "${ovlpath}"
-  echo "Syncing filesystem writes to disc. This could take a while."
-  sync -f "${ovlpath}"
-  mkfs.ext4 -F -L OVERLAY -O ^64bit -j -E nodiscard "${ovlpath}" &> /dev/null
-  tune2fs -c0 -i0 -ouser_xattr,acl "${ovlpath}" &> /dev/null
-  e2fsck -yf "${tgtp2}" &> /dev/null
-  ovl=$(mktemp -d)
-  mount "${ovlpath}" "${ovl}"
-  mkdir -m 0755 --context=system_u:object_r:root_t:s0 \
-    $ovl/overlayfs $ovl/ovlwork
-  umount $ovl
-  chmod 0600 "${ovlpath}" &> /dev/null || :
+  echo -e "${green}[5/7]${nc} Skipping persistent overlay initialization"
 fi
 ### OVERLAY ENDS ###
 
 ### GRUB STARTS ###
-echo -e "${green}[6/7]${nc} Adding overlay to ${espmnt}/EFI/BOOT/grub.cfg"
+echo -e "${green}[6/7]${nc} Updating ${espmnt}/EFI/BOOT/grub.cfg"
 isolabel=($(lsblk -no LABEL "${isoloop}" || :))
 sed -i -r "s/root=live:CDLABEL="${isolabel}"/root=live:UUID="${tgtuuid}"/" "${espmnt}"/EFI/BOOT/grub.cfg
 sed -i -r "s/set default=\"1\"/set default=\"0\"/" "${espmnt}"/EFI/BOOT/grub.cfg
-if [[ ${dirovl} == true && "${datafs}" == "ext4" ]]; then
-  sed -i -r "s/rd\.live\.image|liveimg/& rd.live.overlay=UUID="${tgtuuid}":\/LiveOS\/overlayfs rd.live.overlay.overlayfs/" "${espmnt}"/EFI/BOOT/grub.cfg
-else
-  sed -i -r "s/rd\.live\.image|liveimg/& rd.live.overlay=UUID="${tgtuuid}" rd.live.overlay.overlayfs/" "${espmnt}"/EFI/BOOT/grub.cfg
+if [[ ${noovl} != true ]]; then
+  if [[ ${dirovl} == true && "${datafs}" == "ext4" ]]; then
+    sed -i -r "s/rd\.live\.image|liveimg/& rd.live.overlay=UUID="${tgtuuid}":\/LiveOS\/overlayfs rd.live.overlay.overlayfs/" "${espmnt}"/EFI/BOOT/grub.cfg
+  else
+    sed -i -r "s/rd\.live\.image|liveimg/& rd.live.overlay=UUID="${tgtuuid}" rd.live.overlay.overlayfs/" "${espmnt}"/EFI/BOOT/grub.cfg
+  fi
 fi
 ### GRUB ENDS ###
 

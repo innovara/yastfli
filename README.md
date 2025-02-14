@@ -38,6 +38,10 @@ With the above disclaimer out of the way, let’s take a quick look at the help 
    Label of the data partition.
    Default is LIVE.
 
+ --no-overlay|-n
+   Don't create an overlay.
+   Default is false.
+
  --size-mb|-s
    Size in MB of the overlay file.
    It can't be more than 4095 for fat32 data partitions.
@@ -64,9 +68,13 @@ To use `fat32` instead of `ext4` for the data partition, you would use `-f fat32
 ```
 sudo ./yastfli -i path/to/ISO -t /dev/sdX -s 2048 -f fat32
 ```
-If you prefered to use a directory overlay, your only option is `ext4` which is the default file system for the data partition and you would enable it with `-d`.
+If you preferred to use a directory overlay, your only option is `ext4` which is the default file system for the data partition and you would enable it with `-d`.
 ```
 sudo ./yastfli -i path/to/ISO -t /dev/sdX -d
+```
+If you did not want to create any overlay at all, you would use `-n`. Any overlay-related option used in error would be ignored.
+```
+sudo ./yastfli -i path/to/ISO -t /dev/sdX -n
 ```
 If you preferred to use your own label for the data partition, you would use `-l mylabel`, which is compatible with all the other options, but be aware that it isn’t sanitised to make it compliant with either file format’s requirements.
 ```
