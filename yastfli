@@ -106,8 +106,8 @@ while true ; do
       shift
       ;;
     --no-overlay|-n)
-      shift 0
       noovl=true
+      shift 0
       ;;
     --size-mb|-s)
       size="${2}"
