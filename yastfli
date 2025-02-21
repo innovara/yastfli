@@ -164,14 +164,9 @@ elif [[ ${dirovl} == true && "${tgtp2fs}" == "fat32" && \
         ${noovl} == false && ${nofmt} == true ]]; then
   echo "ERROR: filesystem on "${tgtp2}" is fat32 and not compatible with directory overlay"
   exit 1
-elif [[ ${nofmt} == true ]] && ! [[ -b "${tgtp1}" && -b "${tgtp2}" ]]; then
-  echo "ERROR: incompatible partition layout. Is this a Live device created with yastfli?"
-  exit 1
-elif [[ ${nofmt} == true && "${tgtp1fs}" != "fat32" ]]; then
-  echo "ERROR: filesystem on "${tgtp1}" is invalid. It can only be fat32"
-  exit 1
-elif [[ ${nofmt} == true && "${tgtp2fs}" != "ext4" && "${tgtp2fs}" != "fat32" ]]; then
-  echo "ERROR: filesystem on "${tgtp2}" is invalid. It can only be ext4 or fat32"
+elif [[ ${nofmt} == true && \
+  (( "${tgtp1fs}" != "fat32" ) || ("${tgtp2fs}" != "ext4" && "${tgtp2fs}" != "fat32" )) ]]; then 
+  echo "ERROR: preserve mode can't be used with this device. Was yastfli used to create the Live OS?"
   exit 1
 fi
 if [[ ${nofmt} == true ]]; then
