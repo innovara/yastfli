@@ -156,17 +156,13 @@ elif ! [[ -b "${tgt}" ]]; then
 elif [[ "${datafs}" != "ext4" && "${datafs}" != "fat32" ]]; then
   echo "ERROR: invalid data partition filesystem "${datafs}". It can only be ext4 or fat32"
   exit 1
-elif [[ ${nofmt} == false && ${dirovl} == true && \
-        "${datafs}" == "fat32" && ${noovl} == false ]]; then
-  echo "ERROR: fat32 is not compatible with directory overlay. Use file or change to ext4"
-  exit 1
 elif [[ ${nofmt} == true && \
   (( "${tgtp1fs}" != "fat32" ) || ("${tgtp2fs}" != "ext4" && "${tgtp2fs}" != "fat32" )) ]]; then 
   echo "ERROR: preserve mode can't be used with this device. Was yastfli used to create the Live OS?"
   exit 1
-elif [[ ${nofmt} == true  && ${dirovl} == true && \
-        "${tgtp2fs}" == "fat32" && ${noovl} == false ]]; then
-  echo "ERROR: filesystem on "${tgtp2}" is fat32 and not compatible with directory overlay"
+elif [[ ( "${datafs}" == "fat32" || "${tgtp2fs}" == "fat32" ) && \
+           ${dirovl} == true && ${noovl} == false ]]; then
+  echo "ERROR: directory overlay can't be used with fat32 on "${tgtp2}""
   exit 1
 fi
 if [[ ${nofmt} == true ]]; then
