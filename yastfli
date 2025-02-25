@@ -258,7 +258,7 @@ if [[ ${noovl} != true ]]; then # create on normal mode
     sync -f "${ovlpath}"
     mkfs.ext4 -F -L OVERLAY -O ^64bit -j -E nodiscard "${ovlpath}" &> /dev/null
     tune2fs -c0 -i0 -ouser_xattr,acl "${ovlpath}" &> /dev/null
-    e2fsck -yf "${tgtp2}" &> /dev/null
+    e2fsck -yf "${ovlpath}" &> /dev/null
     ovl=$(mktemp -d)
     mount "${ovlpath}" "${ovl}"
     mkdir -m 0755 --context=system_u:object_r:root_t:s0 $ovl/overlayfs $ovl/ovlwork
