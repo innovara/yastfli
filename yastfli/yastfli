@@ -71,7 +71,7 @@ usage() {
 
 ### root CHECK STARTS ###
 if [[ $(id -u) -ne 0 ]]; then
-   echo "ERROR: yastfli must be run as root"
+   echo -e "\033[0;31mERROR:\033[0m yastfli must be run as root"
    exit 1
 fi
 ### root CHECK ENDS ###
@@ -86,6 +86,7 @@ noovl=false
 size=512
 tgt=''
 green='\033[0;32m'
+red='\033[0;31m'
 nc='\033[0m' # no color
 ### VARIABLE INITIALIZATION ENDS ###
 
@@ -128,7 +129,7 @@ while true ; do
       shift
       ;;
     --*|-*)
-      echo "ERROR: invalid syntax. Use -h for help"
+      echo -e "${red}ERROR:${nc} invalid syntax. Use -h for help"
       exit 1
       ;;
     *)
@@ -145,24 +146,24 @@ done
 [[ -n "${tgt}" && -n $(parted -s "${tgtp2}" print 2>/dev/null | grep ext4) ]] && tgtp2fs="ext4"
 [[ -n "${tgt}" && -n $(parted -s "${tgtp2}" print 2>/dev/null | grep fat32) ]] && tgtp2fs="fat32"
 if [[ -z "${iso}" || -z "${tgt}" ]]; then
-  echo "ERROR: invalid syntax. You need at least -i <iso> -t <device>"
+  echo -e "${red}ERROR:${nc} invalid syntax. You need at least -i <iso> -t <device>"
   exit 1
 elif ! [[ -f "${iso}" ]]; then
-  echo "ERROR: ISO file "${iso}" doesn't exist"
+  echo -e "${red}ERROR:${nc} ISO file "${iso}" doesn't exist"
   exit 1
 elif ! [[ -b "${tgt}" ]]; then
-  echo "ERROR: "${tgt}" not present"
+  echo -e "${red}ERROR:${nc} "${tgt}" not present"
   exit 1
 elif [[ "${datafs}" != "ext4" && "${datafs}" != "fat32" ]]; then
-  echo "ERROR: invalid data partition filesystem "${datafs}". It can only be ext4 or fat32"
+  echo -e "${red}ERROR:${nc} invalid data partition filesystem "${datafs}". It can only be ext4 or fat32"
   exit 1
 elif [[ ${nofmt} == true && \
   (( "${tgtp1fs}" != "fat32" ) || ("${tgtp2fs}" != "ext4" && "${tgtp2fs}" != "fat32" )) ]]; then 
-  echo "ERROR: preserve mode can't be used with this device. Was yastfli used to create the Live OS?"
+  echo -e "${red}ERROR:${nc} preserve mode can't be used with this device. Was yastfli used to create the Live OS?"
   exit 1
 elif [[ ( "${datafs}" == "fat32" || "${tgtp2fs}" == "fat32" ) && \
            ${dirovl} == true && ${noovl} == false ]]; then
-  echo "ERROR: directory overlay can't be used with fat32 on "${tgtp2}""
+  echo -e "${red}ERROR:${nc} directory overlay can't be used with fat32 on "${tgtp2}""
   exit 1
 fi
 if [[ ${nofmt} == true ]]; then
@@ -177,8 +178,32 @@ elif [[ ${noovl} == true ]]; then
 fi
 ### ARGUMENT HANDLING ENDS ###
 
+### CLEAN UP ROUTINE STARTS ###
+cleanup() {
+  local status=${?}
+  if [[ ${status} != 0 ]]; then
+    echo -e "${red}ERROR/INTERRUPT detected${nc} (Exit status="${status}"). Cleaning up may take some time."
+    [[ -n "${espmnt}" ]] && sync -f "${espmnt}"/
+    [[ -n "${datamnt}" ]] && sync -f "${datamnt}"/
+  else
+    echo -e "${green}[7/7]${nc}  cleaning up"
+  fi
+  [[ -n "${isoloop}" ]] && umount "${isoloop}"
+  [[ -n "${isoloop}" ]] && losetup -d "${isoloop}"
+  [[ -n "${espmnt}" ]] && umount "${espmnt}"
+  [[ -n "${datamnt}" ]] &&  umount "${datamnt}"
+  eject "${tgt}"
+  udisksctl power-off -b "${tgt}"
+  [[ ${status} == 0 ]] && echo "INFO:  finished. You can unplug your device now" || exit ${status}
+}
+trap cleanup EXIT
+trap true INT QUIT ABRT TERM
+### CLEAN UP ROUTINE ENDS ###
+
+set -e # exit immediately on error from here
+
 ### DEVICE PREP STARTS ###
-ls "${tgt}"* | xargs -n1 umount -l >/dev/null 2>&1
+ls "${tgt}"* | xargs -n1 umount -l >/dev/null 2>&1 || :
 isoloop=$(losetup -Pf "${iso}" --show)
 isodata=$(mktemp -d)
 mount "${isoloop}" "${isodata}" >/dev/null 2>&1
@@ -221,7 +246,7 @@ if [[ ${nofmt} != true ]]; then # format on normal mode
       fsck.fat -aVw "${tgtp2}" &> /dev/null
       ;;
     *)
-      echo "ERROR: invalid "${label}" file system "${datafs}". It can only be ext4 or fat32"
+      echo -e "${red}ERROR:${nc} invalid "${label}" file system "${datafs}". It can only be ext4 or fat32"
       exit 1
       ;;
   esac
@@ -240,9 +265,9 @@ sync -f "${datamnt}"/
 ### DATA PARTITION ENDS ###
 
 ### OVERLAY STARTS ###
-tgtuuid=($(lsblk -no UUID "${tgtp2}" || :)) # out of if statement because it's always needed
+tgtuuid=($(lsblk -no UUID "${tgtp2}")) # out of if statement because it's always needed
 if [[ ${noovl} != true ]]; then # create on normal mode
-  tgtlabel=($(lsblk -no LABEL "${tgtp2}" || :))
+  tgtlabel=($(lsblk -no LABEL "${tgtp2}"))
   tgtfile=overlay-"${tgtlabel}"-"${tgtuuid}"
   ovlpath="${datamnt}"/LiveOS/"${tgtfile}"
   echo -e "${green}[5/7]${nc}  initializing persistent overlay LiveOS/"${tgtfile}" on "${tgtp2}""
@@ -263,7 +288,7 @@ if [[ ${noovl} != true ]]; then # create on normal mode
     mount "${ovlpath}" "${ovl}"
     mkdir -m 0755 --context=system_u:object_r:root_t:s0 $ovl/overlayfs $ovl/ovlwork
     umount $ovl
-    chmod 0600 "${ovlpath}" &> /dev/null || :
+    chmod 0600 "${ovlpath}" &> /dev/null
   fi
 else
   echo -e "${green}[5/7]${nc}  skipping persistent overlay initialization"
@@ -272,7 +297,7 @@ fi
 
 ### GRUB STARTS ###
 echo -e "${green}[6/7]${nc}  updating EFI/BOOT/grub.cfg on "${tgtp1}""
-isolabel=($(lsblk -no LABEL "${isoloop}" || :))
+isolabel=($(lsblk -no LABEL "${isoloop}"))
 sed -i -r "s/root=live:CDLABEL="${isolabel}"/root=live:UUID="${tgtuuid}"/" "${espmnt}"/EFI/BOOT/grub.cfg
 sed -i -r "s/set default=\"1\"/set default=\"0\"/" "${espmnt}"/EFI/BOOT/grub.cfg
 if [[ ${noovl} != true ]]; then # update on normal mode
@@ -284,13 +309,3 @@ if [[ ${noovl} != true ]]; then # update on normal mode
 fi
 ### GRUB ENDS ###
 
-### CLEAN UP STARTS ###
-echo -e "${green}[7/7]${nc}  cleaning up"
-umount "${isoloop}"
-losetup -d "${isoloop}"
-umount "${espmnt}"
-umount "${datamnt}"
-eject "${tgt}"
-udisksctl power-off -b "${tgt}"
-echo "INFO:  finished. You can unplug your device now"
-### CLEAN UP ENDS ###
