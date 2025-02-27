@@ -291,5 +291,6 @@ losetup -d "${isoloop}"
 umount "${espmnt}"
 umount "${datamnt}"
 eject "${tgt}"
+udisksctl power-off -b "${tgt}"
 echo "INFO:  finished. You can unplug your device now"
 ### CLEAN UP ENDS ###
