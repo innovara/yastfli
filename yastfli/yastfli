@@ -184,16 +184,16 @@ cleanup_exit() {
   set +e # ignore all possible errors in this handler to prevent wrong script return code
   if [[ ${status} != 0 ]]; then
     echo -e "${red}ERROR/ABORT detected${nc} (Exit status=${status}). Cleaning up may take some time."
-    sync -f "${espmnt}"/ >/dev/null 2>&1
-    sync -f "${datamnt}"/ >/dev/null 2>&1
+    sync -f "${espmnt}"/
+    sync -f "${datamnt}"/
   else
     echo -e "${green}[7/7]${nc}  cleaning up"
   fi
   # CLEANUP
-  umount "${isoloop}" >/dev/null 2>&1
-  losetup -d "${isoloop}" >/dev/null 2>&1
-  umount -l "${espmnt}" >/dev/null 2>&1 # -l required because main still be busy
-  umount -l "${datamnt}" >/dev/null 2>&1 # -l required because main still be busy
+  umount "${isoloop}"
+  losetup -d "${isoloop}"
+  umount -l "${espmnt}"
+  umount -l "${datamnt}"
   eject "${tgt}"
   udisksctl power-off -b "${tgt}"
   [[ ${status} == 0 ]] && echo "INFO:  finished. You can unplug your device now"
