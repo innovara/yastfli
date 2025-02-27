@@ -178,30 +178,29 @@ elif [[ ${noovl} == true ]]; then
 fi
 ### ARGUMENT HANDLING ENDS ###
 
-### CLEANUP BEGIN STARTS ###
-cleanup_exit() {
-  local status=${?} # save exit code
-  set +e # ignore all possible errors in this handler to prevent wrong script return code
+### CLEAN UP ROUTINE STARTS ###
+cleanup() {
+  local status=${?}
   if [[ ${status} != 0 ]]; then
-    echo -e "${red}ERROR/ABORT detected${nc} (Exit status=${status}). Cleaning up may take some time."
-    sync -f "${espmnt}"/
-    sync -f "${datamnt}"/
+    echo -e "${red}ERROR/ABORT detected${nc} (Exit status="${status}"). Cleaning up may take some time."
+    [[ -n "${espmnt}" ]] && sync -f "${espmnt}"/
+    [[ -n "${datamnt}" ]] && sync -f "${datamnt}"/
   else
     echo -e "${green}[7/7]${nc}  cleaning up"
   fi
-  # CLEANUP
-  umount "${isoloop}"
-  losetup -d "${isoloop}"
-  umount -l "${espmnt}"
-  umount -l "${datamnt}"
+  [[ -n "${isoloop}" ]] && umount "${isoloop}"
+  [[ -n "${isoloop}" ]] && losetup -d "${isoloop}"
+  [[ -n "${espmnt}" ]] && umount "${espmnt}"
+  [[ -n "${datamnt}" ]] &&  umount "${datamnt}"
   eject "${tgt}"
   udisksctl power-off -b "${tgt}"
-  [[ ${status} == 0 ]] && echo "INFO:  finished. You can unplug your device now"
+  [[ ${status} == 0 ]] && echo "INFO:  finished. You can unplug your device now" || exit ${status}
 }
-trap cleanup_exit EXIT # to call cleanup_exit() on error or exit
-trap true INT QUIT ABRT TERM # to have cleanup_exit() called with $?=130 on Ctrl-C
-set -e # enable abort on error starting from this line
-### CLEANUP BEGIN ENDS ###
+trap cleanup EXIT
+trap true INT QUIT ABRT TERM
+### CLEAN UP ROUTINE ENDS ###
+
+set -e # exit immediately on error from here
 
 ### DEVICE PREP STARTS ###
 ls "${tgt}"* | xargs -n1 umount -l >/dev/null 2>&1 || :
@@ -277,10 +276,10 @@ if [[ ${noovl} != true ]]; then # create on normal mode
   else
     truncate -s 0 "${ovlpath}"
     [[ "${datafs}" == "fat32" ]] && \
-      echo "INFO:  allocating disk space for overlay file. This may take a while" || :
+      echo "INFO:  allocating disk space for overlay file. This may take a while"
     fallocate -x -l ${size}M "${ovlpath}"
     [[ "${datafs}" == "fat32" ]] && \
-      echo "INFO:  syncing filesystem writes to disk" || :
+      echo "INFO:  syncing filesystem writes to disk"
     sync -f "${ovlpath}"
     mkfs.ext4 -F -L OVERLAY -O ^64bit -j -E nodiscard "${ovlpath}" &> /dev/null
     tune2fs -c0 -i0 -ouser_xattr,acl "${ovlpath}" &> /dev/null
@@ -310,6 +309,3 @@ if [[ ${noovl} != true ]]; then # update on normal mode
 fi
 ### GRUB ENDS ###
 
-### CLEAN UP STARTS ###
-# cleanup_exit called automatically
-### CLEAN UP ENDS ###
