@@ -78,43 +78,42 @@ option.
  --help|-h
    This help.
 ```
+
 You will need root access or to be able to run `yastfli` with `sudo` and, at
 the very least, you will have to provide the path to the ISO file and the
 target device that you want to write it to.
 
-```
-sudo ./yastfli -i path/to/ISO -t /dev/sdX
-```
+    sudo ./yastfli -i path/to/ISO -t /dev/sdX
+
 If no other argument is provided, `yastfli` will use `ext4` for the data
 partition and create an overlay image of 512M.
 
 To create a larger overlay image, you would use `-s size`.
-```
-sudo ./yastfli -i path/to/ISO -t /dev/sdX -s 2048
-``` 
+
+    sudo ./yastfli -i path/to/ISO -t /dev/sdX -s 2048
+
 To use `fat32` instead of `ext4` for the data partition, you would use
 `-f fat32`. The size of the overlay image would be limited to 4095M and you
 would not be able to use a directory overlay.
-```
-sudo ./yastfli -i path/to/ISO -t /dev/sdX -s 2048 -f fat32
-```
+
+    sudo ./yastfli -i path/to/ISO -t /dev/sdX -s 2048 -f fat32
+
 If you preferred to use a directory overlay, your only option is `ext4` which
 is the default file system for the data partition and you would enable it
 with `-d`.
-```
-sudo ./yastfli -i path/to/ISO -t /dev/sdX -d
-```
+
+    sudo ./yastfli -i path/to/ISO -t /dev/sdX -d
+
 If you did not want to create any overlay at all, you would use `-n`. Any
 overlay-related option used in error would be ignored.
-```
-sudo ./yastfli -i path/to/ISO -t /dev/sdX -n
-```
+
+    sudo ./yastfli -i path/to/ISO -t /dev/sdX -n
+
 If you preferred to use your own label for the data partition, you would use
 `-l mylabel`, which is compatible with all the other options, but be aware that
 it isn’t sanitised to make it compliant with either file format’s requirements.
-```
-sudo ./yastfli -i path/to/ISO -t /dev/sdX -l MY_LABEL
-```
+
+    sudo ./yastfli -i path/to/ISO -t /dev/sdX -l MY_LABEL
 
 Preserve mode
 -------------
@@ -145,17 +144,16 @@ a directory overlay when the data partition is already fat32.
 
 Finally, the preserve option is invoked simply adding the option to the command
 line.
-```
-sudo ./yastfli -i path/to/ISO -t /dev/sdX -p
-```
+
+    sudo ./yastfli -i path/to/ISO -t /dev/sdX -p
+
 You can use some options like overlay directory on ext4.
-```
-sudo ./yastfli -i path/to/ISO -t /dev/sdX -p -d
-```
+
+    sudo ./yastfli -i path/to/ISO -t /dev/sdX -p -d
+
 And also overlay size.
-```
-sudo ./yastfli -i path/to/ISO -t /dev/sdX -p -s 2048
-```
+
+    sudo ./yastfli -i path/to/ISO -t /dev/sdX -p -s 2048
 
 Does yastfli work with other distributions?
 -------------------------------------------
