@@ -182,7 +182,7 @@ fi
 cleanup() {
   local status=${?}
   if [[ ${status} != 0 ]]; then
-    echo -e "${red}ERROR/ABORT detected${nc} (Exit status="${status}"). Cleaning up may take some time."
+    echo -e "${red}ERROR/INTERRUPT detected${nc} (Exit status="${status}"). Cleaning up may take some time."
     [[ -n "${espmnt}" ]] && sync -f "${espmnt}"/
     [[ -n "${datamnt}" ]] && sync -f "${datamnt}"/
   else
