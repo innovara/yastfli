@@ -1,5 +1,5 @@
 Name:           yastfli
-Version:        0.0.1
+Version:        0.0.2
 Release:        1%{?dist}
 Summary:        Script to copy Fedora Live ISOs onto USB memory sticks and external drives
 BuildArch:      noarch
@@ -58,6 +58,9 @@ mkdir -p %{buildroot}/%{_bindir}
 
 
 %changelog
+* Tue Mar 4 2025 Manuel Fombuena <mfombuena@innovara.co.uk>
+- Version 0.0.2-1: add new clean up routine
+
 * Fri Feb 28 2025 Manuel Fombuena <mfombuena@innovara.co.uk>
 - Version 0.0.1-1: first rpm package
 
