@@ -226,7 +226,8 @@ if [[ ${nofmt} == true ]]; then # delete folders on preserve mode
   sync -f "${espmnt}"/
 fi
 echo -e "${green}[2/7]${nc}  copying data to EFI partition"
-rsync -a --progress "${isodata}"/{"EFI","images"} "${espmnt}"/
+rsync -a --progress "${isodata}"/EFI "${espmnt}"/
+[ -d "${isodata}"/images ] && rsync -a --progress "${isodata}"/images "${espmnt}"/
 echo "INFO:  syncing filesystem writes to disk. Please wait"
 sync -f "${espmnt}"/
 ### EFI PARTITION ENDS ###
@@ -259,7 +260,7 @@ if [[ ${nofmt} == true ]]; then # delete folders on preserve mode
   sync -f "${datamnt}"/
 fi
 echo -e "${green}[4/7]${nc}  copying data to "${label}" partition"
-rsync -a --progress --exclude={"EFI","images","boot"} "${isodata}/" "${datamnt}"
+rsync -a --progress --exclude={"EFI","images"} "${isodata}/" "${datamnt}"
 echo "INFO:  syncing filesystem writes to disk. This may take a while..."
 sync -f "${datamnt}"/
 ### DATA PARTITION ENDS ###
@@ -296,15 +297,19 @@ fi
 ### OVERLAY ENDS ###
 
 ### GRUB STARTS ###
-echo -e "${green}[6/7]${nc}  updating EFI/BOOT/grub.cfg on "${tgtp1}""
+echo -e "${green}[6/7]${nc}  updating grub.cfg"
 isolabel=($(lsblk -no LABEL "${isoloop}"))
 sed -i -r "s/root=live:CDLABEL="${isolabel}"/root=live:UUID="${tgtuuid}"/" "${espmnt}"/EFI/BOOT/grub.cfg
+sed -i -r "s/root=live:CDLABEL="${isolabel}"/root=live:UUID="${tgtuuid}"/" "${datamnt}"/boot/grub2/grub.cfg
 sed -i -r "s/set default=\"1\"/set default=\"0\"/" "${espmnt}"/EFI/BOOT/grub.cfg
+sed -i -r "s/set default=\"1\"/set default=\"0\"/" "${datamnt}"/boot/grub2/grub.cfg
 if [[ ${noovl} != true ]]; then # update on normal mode
   if [[ ${dirovl} == true && "${datafs}" == "ext4" ]]; then
     sed -i -r "s/rd\.live\.image|liveimg/& rd.live.overlay=UUID="${tgtuuid}":\/LiveOS\/overlayfs rd.live.overlay.overlayfs/" "${espmnt}"/EFI/BOOT/grub.cfg
+    sed -i -r "s/rd\.live\.image|liveimg/& rd.live.overlay=UUID="${tgtuuid}":\/LiveOS\/overlayfs rd.live.overlay.overlayfs/" "${datamnt}"/boot/grub2/grub.cfg
   else
     sed -i -r "s/rd\.live\.image|liveimg/& rd.live.overlay=UUID="${tgtuuid}" rd.live.overlay.overlayfs/" "${espmnt}"/EFI/BOOT/grub.cfg
+    sed -i -r "s/rd\.live\.image|liveimg/& rd.live.overlay=UUID="${tgtuuid}" rd.live.overlay.overlayfs/" "${datamnt}"/boot/grub2/grub.cfg
   fi
 fi
 ### GRUB ENDS ###
