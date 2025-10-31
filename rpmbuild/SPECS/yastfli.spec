@@ -1,7 +1,7 @@
 Name:           yastfli
-Version:        0.0.3
+Version:        0.0.4
 Release:        1%{?dist}
-Summary:        Script to copy Fedora Live ISOs onto USB memory sticks and external drives
+Summary:        Script to copy Fedora Live ISOs to USB drives with persistent storage
 BuildArch:      noarch
 
 License:        GPLv3+
@@ -22,10 +22,10 @@ Requires:       util-linux-core
 
 
 %description
-yastfli, pronounced justfly, is a relatively simple script to copy Fedora Live
-ISOs onto USB memory sticks and external drives, with an overlay for permanent
-storage. It supports ext4 and fat32 for the data partition, as well as image or
-directory types of overlay for ext4.
+yastfli, pronounced "just fly", is a simple script that copies Fedora Live ISOs
+to USB memory sticks or external drives and adds an overlay for persistent
+storage. It supports ext4 and FAT32 data partitions, as well as image or
+directory overlays for ext4.
 
 
 %prep
@@ -58,12 +58,15 @@ mkdir -p %{buildroot}/%{_bindir}
 
 
 %changelog
-* Mon Apr 14 2025 Manuel Fombuena <mfombuena@innovara.tech>
-- Version 0.0.3-1: add support for Fedora 42
+* Fri Oct 31 2025 Manuel Fombuena <mfombuena@innovara.tech> - 0.0.4-1
+- AI-assisted proofreading of documentation
+- Implement rpmlint fixes
 
-* Tue Mar 4 2025 Manuel Fombuena <mfombuena@innovara.tech>
-- Version 0.0.2-1: add new clean up routine
+* Mon Apr 14 2025 Manuel Fombuena <mfombuena@innovara.tech> - 0.0.3-1
+- Add support for Fedora 42
 
-* Fri Feb 28 2025 Manuel Fombuena <mfombuena@innovara.tech>
-- Version 0.0.1-1: first rpm package
+* Tue Mar 4 2025 Manuel Fombuena <mfombuena@innovara.tech> - 0.0.2-1
+- Add new clean up routine
 
+* Fri Feb 28 2025 Manuel Fombuena <mfombuena@innovara.tech> - 0.0.1-1
+- First rpm package
