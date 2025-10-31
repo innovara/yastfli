@@ -31,39 +31,39 @@ usage() {
 
  --directory|-d
    Use a directory overlay instead of an image file.
-   It can't be used with fat32. Size option would be ignored.
-   Default is false.
+   Cannot be used with FAT32. The size option is ignored.
+   Default: false.
 
  --filesystem|-f [ext4|fat32]
    Filesystem of the data partition.
-   Default is ext4.
+   Default: ext4.
 
  --iso|-i
-   Path to Live ISO file.
+   Path to the Live ISO file.
 
  --label|-l
    Label of the data partition.
-   Default is LIVE.
+   Default: LIVE.
 
  --no-overlay|-n
-   Don't create an overlay.
-   Default is false.
+   Do not create an overlay.
+   Default: false.
 
  --preserve|-p
-   Don't format EFI and data partitions.
-   Delete EFI, images and LiveOS folders instead. Deletes overlay.
-   Default is false.
+   Do not format EFI and data partitions.
+   Deletes EFI, images, and LiveOS folders instead. Deletes overlay.
+   Default: false.
 
  --size-mb|-s
    Size in MB of the overlay file.
-   It can't be more than 4095 for fat32 data partitions.
-   Default is 512.
+   Cannot exceed 4095 for FAT32 data partitions.
+   Default: 512.
 
  --target|-t
-   Target device e.g. /dev/sda.
+   Target device, e.g. /dev/sda.
 
  --help|-h
-   This help.
+   Display this help message.
  "
   exit 1
 }
