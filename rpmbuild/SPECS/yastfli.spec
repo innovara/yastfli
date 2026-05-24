@@ -1,5 +1,5 @@
 Name:           yastfli
-Version:        0.0.4
+Version:        1.0
 Release:        1%{?dist}
 Summary:        Script to copy Fedora Live ISOs to USB drives with persistent storage
 BuildArch:      noarch
@@ -58,6 +58,9 @@ mkdir -p %{buildroot}/%{_bindir}
 
 
 %changelog
+* Sun May 24 2026 Manuel Fombuena <mfombuena@innovara.tech> - 1.0-1
+- Various minor code improvements
+
 * Fri Oct 31 2025 Manuel Fombuena <mfombuena@innovara.tech> - 0.0.4-1
 - AI-assisted proofreading of documentation
 - Implement rpmlint fixes
