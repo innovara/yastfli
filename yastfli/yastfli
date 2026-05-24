@@ -270,12 +270,12 @@ if [[ ${noovl} != true ]]; then # create on normal mode
   ovlpath="${datamnt}"/LiveOS/"${tgtfile}"
   echo -e "${green}[5/7]${nc}  initializing persistent overlay LiveOS/"${tgtfile}" on "${tgtp2}""
   if [[ ${dirovl} == true && "${datafs}" == "ext4" ]]; then
-    mkdir -m 0755 --context=system_u:object_r:root_t:s0 $datamnt/LiveOS/overlayfs $datamnt/LiveOS/ovlwork
+    mkdir -m 0755 --context=system_u:object_r:root_t:s0 "${datamnt}/LiveOS/overlayfs" "${datamnt}/LiveOS/ovlwork"
   else
     truncate -s 0 "${ovlpath}"
     [[ "${datafs}" == "fat32" ]] && \
       echo "INFO:  allocating disk space for overlay file. This may take a while"
-    fallocate -x -l ${size}M "${ovlpath}"
+    fallocate -x -l "${size}M" "${ovlpath}"
     [[ "${datafs}" == "fat32" ]] && \
       echo "INFO:  syncing filesystem writes to disk"
     sync -f "${ovlpath}"
@@ -284,8 +284,8 @@ if [[ ${noovl} != true ]]; then # create on normal mode
     e2fsck -yf "${ovlpath}" &> /dev/null
     ovl=$(mktemp -d)
     mount "${ovlpath}" "${ovl}"
-    mkdir -m 0755 --context=system_u:object_r:root_t:s0 $ovl/overlayfs $ovl/ovlwork
-    umount $ovl
+    mkdir -m 0755 --context=system_u:object_r:root_t:s0 "${ovl}/overlayfs" "${ovl}/ovlwork"
+    umount "${ovl}"
     chmod 0600 "${ovlpath}" &> /dev/null
   fi
 else
