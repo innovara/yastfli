@@ -186,9 +186,12 @@ cleanup() {
     echo -e "${green}[7/7]${nc}  cleaning up"
   fi
   [[ -n "${isoloop}" ]] && umount "${isoloop}"
+  [[ -n "${isodata}" ]] && rmdir "${isodata}"
   [[ -n "${isoloop}" ]] && losetup -d "${isoloop}"
   [[ -n "${espmnt}" ]] && umount "${espmnt}"
+  [[ -n "${espmnt}" ]] && rmdir "${espmnt}"
   [[ -n "${datamnt}" ]] &&  umount "${datamnt}"
+  [[ -n "${datamnt}" ]] && rmdir "${datamnt}"
   eject "${tgt}"
   udisksctl power-off -b "${tgt}"
   [[ ${status} == 0 ]] && echo "INFO:  finished. You can unplug your device now" || exit ${status}
@@ -286,6 +289,7 @@ if [[ ${noovl} != true ]]; then # create on normal mode
     mount "${ovlpath}" "${ovl}"
     mkdir -m 0755 --context=system_u:object_r:root_t:s0 "${ovl}/overlayfs" "${ovl}/ovlwork"
     umount "${ovl}"
+    rmdir "${ovl}"
     chmod 0600 "${ovlpath}" &> /dev/null
   fi
 else
