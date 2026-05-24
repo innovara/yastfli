@@ -22,6 +22,19 @@ an overlay for persistent storage to Fedora Live images.
 - [3] https://github.com/livecd-tools/livecd-tools/issues/253
 - [4] https://github.com/livecd-tools/livecd-tools/issues/262
 
+Installation
+------------
+
+`yastfli` can be used directly without installation. Download the script,
+make it executable, and run it with `sudo`.
+
+RPM packages are available under
+[Releases](https://github.com/innovara/yastfli/releases) on GitHub.
+Alternatively, install from the Copr repository:
+
+    sudo dnf copr enable mandolin/innovara
+    sudo dnf install yastfli
+
 How to use yastfli
 ------------------
 
