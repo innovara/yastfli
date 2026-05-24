@@ -263,9 +263,9 @@ sync -f "${datamnt}"/
 ### DATA PARTITION ENDS ###
 
 ### OVERLAY STARTS ###
-tgtuuid=($(lsblk -no UUID "${tgtp2}")) # out of if statement because it's always needed
+tgtuuid=$(lsblk -no UUID "${tgtp2}") # out of if statement because it's always needed
 if [[ ${noovl} != true ]]; then # create on normal mode
-  tgtlabel=($(lsblk -no LABEL "${tgtp2}"))
+  tgtlabel=$(lsblk -no LABEL "${tgtp2}")
   tgtfile=overlay-"${tgtlabel}"-"${tgtuuid}"
   ovlpath="${datamnt}"/LiveOS/"${tgtfile}"
   echo -e "${green}[5/7]${nc}  initializing persistent overlay LiveOS/"${tgtfile}" on "${tgtp2}""
@@ -295,7 +295,7 @@ fi
 
 ### GRUB STARTS ###
 echo -e "${green}[6/7]${nc}  updating grub.cfg"
-isolabel=($(lsblk -no LABEL "${isoloop}"))
+isolabel=$(lsblk -dno LABEL "${isoloop}")
 sed -i -r "s/root=live:CDLABEL="${isolabel}"/root=live:UUID="${tgtuuid}"/" "${espmnt}"/EFI/BOOT/grub.cfg
 sed -i -r "s/root=live:CDLABEL="${isolabel}"/root=live:UUID="${tgtuuid}"/" "${datamnt}"/boot/grub2/grub.cfg
 sed -i -r "s/set default=\"1\"/set default=\"0\"/" "${espmnt}"/EFI/BOOT/grub.cfg
