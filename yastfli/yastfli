@@ -98,7 +98,6 @@ while true ; do
       ;;
     --directory|-d)
       dirovl=true
-      shift 0
       ;;
     --filesystem|-f)
       datafs="${2}"
@@ -114,11 +113,9 @@ while true ; do
       ;;
     --no-overlay|-n)
       noovl=true
-      shift 0
       ;;
     --preserve|-p)
       nofmt=true
-      shift 0
       ;;
     --size-mb|-s)
       size="${2}"
