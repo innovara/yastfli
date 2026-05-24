@@ -137,8 +137,8 @@ done
 ### ARGUMENT PROCESSING ENDS ###
 
 ### ARGUMENT HANDLING STARTS ###
-[[ "${tgt}" = *?[0-9] ]] && tgtp1="${tgt}"p1 || tgtp1="${tgt}"1 # e.g. /dev/mmcblk0p1 || /dev/sda1
-[[ "${tgt}" = *?[0-9] ]] && tgtp2="${tgt}"p2 || tgtp2="${tgt}"2 # e.g. /dev/mmcblk0p2 || /dev/sda2
+[[ "${tgt}" = *?[0-9] ]] && tgtp1="${tgt}p1" || tgtp1="${tgt}1" # e.g. /dev/mmcblk0p1 || /dev/sda1
+[[ "${tgt}" = *?[0-9] ]] && tgtp2="${tgt}p2" || tgtp2="${tgt}2" # e.g. /dev/mmcblk0p2 || /dev/sda2
 [[ -n "${tgt}" && -n $(parted -s "${tgtp1}" print 2>/dev/null | grep fat32) ]] && tgtp1fs="fat32"
 [[ -n "${tgt}" && -n $(parted -s "${tgtp2}" print 2>/dev/null | grep ext4) ]] && tgtp2fs="ext4"
 [[ -n "${tgt}" && -n $(parted -s "${tgtp2}" print 2>/dev/null | grep fat32) ]] && tgtp2fs="fat32"
@@ -146,29 +146,29 @@ if [[ -z "${iso}" || -z "${tgt}" ]]; then
   echo -e "${red}ERROR:${nc} invalid syntax. You need at least -i <iso> -t <device>"
   exit 1
 elif ! [[ -f "${iso}" ]]; then
-  echo -e "${red}ERROR:${nc} ISO file "${iso}" doesn't exist"
+  echo -e "${red}ERROR:${nc} ISO file ${iso} doesn't exist"
   exit 1
 elif ! [[ -b "${tgt}" ]]; then
-  echo -e "${red}ERROR:${nc} "${tgt}" not present"
+  echo -e "${red}ERROR:${nc} ${tgt} not present"
   exit 1
 elif [[ "${datafs}" != "ext4" && "${datafs}" != "fat32" ]]; then
-  echo -e "${red}ERROR:${nc} invalid data partition filesystem "${datafs}". It can only be ext4 or fat32"
+  echo -e "${red}ERROR:${nc} invalid data partition filesystem ${datafs}. It can only be ext4 or fat32"
   exit 1
 elif [[ ${nofmt} == true && \
-  (( "${tgtp1fs}" != "fat32" ) || ("${tgtp2fs}" != "ext4" && "${tgtp2fs}" != "fat32" )) ]]; then 
+  (( "${tgtp1fs}" != "fat32" ) || ("${tgtp2fs}" != "ext4" && "${tgtp2fs}" != "fat32" )) ]]; then
   echo -e "${red}ERROR:${nc} preserve mode can't be used with this device. Was yastfli used to create the Live OS?"
   exit 1
 elif [[ ( "${datafs}" == "fat32" || "${tgtp2fs}" == "fat32" ) && \
            ${dirovl} == true && ${noovl} == false ]]; then
-  echo -e "${red}ERROR:${nc} directory overlay can't be used with fat32 on "${tgtp2}""
+  echo -e "${red}ERROR:${nc} directory overlay can't be used with fat32 on ${tgtp2}"
   exit 1
 fi
 if [[ ${nofmt} == true ]]; then
-  echo "INFO:  filesystem on "${tgtp2}" is "${tgtp2fs}"."
+  echo "INFO:  filesystem on ${tgtp2} is ${tgtp2fs}."
   datafs="${tgtp2fs}"
 fi
 if [[ "${datafs}" == "fat32" && ${size} -gt 4095 && ${noovl} == false ]]; then
-  echo "INFO:  fat32 can't hold an overlay of "${size}"M. Reduced to 4095M"
+  echo "INFO:  fat32 can't hold an overlay of ${size}M. Reduced to 4095M"
   size=4095
 elif [[ ${noovl} == true ]]; then
   echo "INFO:  overlay set no. Any overlay options will be ignored"
@@ -179,9 +179,9 @@ fi
 cleanup() {
   local status=${?}
   if [[ ${status} != 0 ]]; then
-    echo -e "${red}ERROR/INTERRUPT detected${nc} (Exit status="${status}"). Cleaning up may take some time."
-    [[ -n "${espmnt}" ]] && sync -f "${espmnt}"/
-    [[ -n "${datamnt}" ]] && sync -f "${datamnt}"/
+    echo -e "${red}ERROR/INTERRUPT detected${nc} (Exit status=${status}). Cleaning up may take some time."
+    [[ -n "${espmnt}" ]] && sync -f "${espmnt}/"
+    [[ -n "${datamnt}" ]] && sync -f "${datamnt}/"
   else
     echo -e "${green}[7/7]${nc}  cleaning up"
   fi
@@ -220,18 +220,18 @@ mount "${tgtp1}" "${espmnt}"
 if [[ ${nofmt} == true ]]; then # delete folders on preserve mode
   echo -e "${green}[1/7]${nc}  preserving EFI partition. Deleting EFI and images folders"
   rm -fr "${espmnt}"/{"EFI","images"}
-  sync -f "${espmnt}"/
+  sync -f "${espmnt}/"
 fi
 echo -e "${green}[2/7]${nc}  copying data to EFI partition"
-rsync -a --progress "${isodata}"/EFI "${espmnt}"/
-[ -d "${isodata}"/images ] && rsync -a --progress "${isodata}"/images "${espmnt}"/
+rsync -a --progress "${isodata}/EFI" "${espmnt}/"
+[ -d "${isodata}/images" ] && rsync -a --progress "${isodata}/images" "${espmnt}/"
 echo "INFO:  syncing filesystem writes to disk. Please wait"
-sync -f "${espmnt}"/
+sync -f "${espmnt}/"
 ### EFI PARTITION ENDS ###
 
 ### DATA PARTITION STARTS ###
 if [[ ${nofmt} != true ]]; then # format on normal mode
-  echo -e "${green}[3/7]${nc}  formatting "${label}" partition"
+  echo -e "${green}[3/7]${nc}  formatting ${label} partition"
   parted -s "${tgt}" mkpart '"Main Data Partition"' "${datafs}" 257MiB 100%
   case "${datafs}" in
     ext4)
@@ -244,7 +244,7 @@ if [[ ${nofmt} != true ]]; then # format on normal mode
       fsck.fat -aVw "${tgtp2}" &> /dev/null
       ;;
     *)
-      echo -e "${red}ERROR:${nc} invalid "${label}" file system "${datafs}". It can only be ext4 or fat32"
+      echo -e "${red}ERROR:${nc} invalid ${label} file system ${datafs}. It can only be ext4 or fat32"
       exit 1
       ;;
   esac
@@ -252,23 +252,23 @@ fi
 datamnt=$(mktemp -d)
 mount "${tgtp2}" "${datamnt}"
 if [[ ${nofmt} == true ]]; then # delete folders on preserve mode
-  echo -e "${green}[3/7]${nc}  preserving "${label}" partition. Deleting LiveOS folder"
-  rm -fr "${datamnt}"/LiveOS
-  sync -f "${datamnt}"/
+  echo -e "${green}[3/7]${nc}  preserving ${label} partition. Deleting LiveOS folder"
+  rm -fr "${datamnt}/LiveOS"
+  sync -f "${datamnt}/"
 fi
-echo -e "${green}[4/7]${nc}  copying data to "${label}" partition"
+echo -e "${green}[4/7]${nc}  copying data to ${label} partition"
 rsync -a --progress --exclude={"EFI","images"} "${isodata}/" "${datamnt}"
 echo "INFO:  syncing filesystem writes to disk. This may take a while..."
-sync -f "${datamnt}"/
+sync -f "${datamnt}/"
 ### DATA PARTITION ENDS ###
 
 ### OVERLAY STARTS ###
 tgtuuid=$(lsblk -no UUID "${tgtp2}") # out of if statement because it's always needed
 if [[ ${noovl} != true ]]; then # create on normal mode
   tgtlabel=$(lsblk -no LABEL "${tgtp2}")
-  tgtfile=overlay-"${tgtlabel}"-"${tgtuuid}"
-  ovlpath="${datamnt}"/LiveOS/"${tgtfile}"
-  echo -e "${green}[5/7]${nc}  initializing persistent overlay LiveOS/"${tgtfile}" on "${tgtp2}""
+  tgtfile="overlay-${tgtlabel}-${tgtuuid}"
+  ovlpath="${datamnt}/LiveOS/${tgtfile}"
+  echo -e "${green}[5/7]${nc}  initializing persistent overlay LiveOS/${tgtfile} on ${tgtp2}"
   if [[ ${dirovl} == true && "${datafs}" == "ext4" ]]; then
     mkdir -m 0755 --context=system_u:object_r:root_t:s0 "${datamnt}/LiveOS/overlayfs" "${datamnt}/LiveOS/ovlwork"
   else
@@ -296,18 +296,17 @@ fi
 ### GRUB STARTS ###
 echo -e "${green}[6/7]${nc}  updating grub.cfg"
 isolabel=$(lsblk -dno LABEL "${isoloop}")
-sed -i -r "s/root=live:CDLABEL="${isolabel}"/root=live:UUID="${tgtuuid}"/" "${espmnt}"/EFI/BOOT/grub.cfg
-sed -i -r "s/root=live:CDLABEL="${isolabel}"/root=live:UUID="${tgtuuid}"/" "${datamnt}"/boot/grub2/grub.cfg
-sed -i -r "s/set default=\"1\"/set default=\"0\"/" "${espmnt}"/EFI/BOOT/grub.cfg
-sed -i -r "s/set default=\"1\"/set default=\"0\"/" "${datamnt}"/boot/grub2/grub.cfg
+sed -i -r "s/root=live:CDLABEL=${isolabel}/root=live:UUID=${tgtuuid}/" "${espmnt}/EFI/BOOT/grub.cfg"
+sed -i -r "s/root=live:CDLABEL=${isolabel}/root=live:UUID=${tgtuuid}/" "${datamnt}/boot/grub2/grub.cfg"
+sed -i -r "s/set default=\"1\"/set default=\"0\"/" "${espmnt}/EFI/BOOT/grub.cfg"
+sed -i -r "s/set default=\"1\"/set default=\"0\"/" "${datamnt}/boot/grub2/grub.cfg"
 if [[ ${noovl} != true ]]; then # update on normal mode
   if [[ ${dirovl} == true && "${datafs}" == "ext4" ]]; then
-    sed -i -r "s/rd\.live\.image|liveimg/& rd.live.overlay=UUID="${tgtuuid}":\/LiveOS\/overlayfs rd.live.overlay.overlayfs/" "${espmnt}"/EFI/BOOT/grub.cfg
-    sed -i -r "s/rd\.live\.image|liveimg/& rd.live.overlay=UUID="${tgtuuid}":\/LiveOS\/overlayfs rd.live.overlay.overlayfs/" "${datamnt}"/boot/grub2/grub.cfg
+    sed -i -r "s/rd\.live\.image|liveimg/& rd.live.overlay=UUID=${tgtuuid}:\/LiveOS\/overlayfs rd.live.overlay.overlayfs/" "${espmnt}/EFI/BOOT/grub.cfg"
+    sed -i -r "s/rd\.live\.image|liveimg/& rd.live.overlay=UUID=${tgtuuid}:\/LiveOS\/overlayfs rd.live.overlay.overlayfs/" "${datamnt}/boot/grub2/grub.cfg"
   else
-    sed -i -r "s/rd\.live\.image|liveimg/& rd.live.overlay=UUID="${tgtuuid}" rd.live.overlay.overlayfs/" "${espmnt}"/EFI/BOOT/grub.cfg
-    sed -i -r "s/rd\.live\.image|liveimg/& rd.live.overlay=UUID="${tgtuuid}" rd.live.overlay.overlayfs/" "${datamnt}"/boot/grub2/grub.cfg
+    sed -i -r "s/rd\.live\.image|liveimg/& rd.live.overlay=UUID=${tgtuuid} rd.live.overlay.overlayfs/" "${espmnt}/EFI/BOOT/grub.cfg"
+    sed -i -r "s/rd\.live\.image|liveimg/& rd.live.overlay=UUID=${tgtuuid} rd.live.overlay.overlayfs/" "${datamnt}/boot/grub2/grub.cfg"
   fi
 fi
 ### GRUB ENDS ###
-
